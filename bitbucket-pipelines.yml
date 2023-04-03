@@ -1,3 +1,6 @@
+image:
+  name: sbtscala/scala-sbt:eclipse-temurin-jammy-17.0.5_8_1.8.2_2.13.10
+
 pipelines:
   default:
     - parallel:
@@ -22,6 +25,8 @@ pipelines:
               name: Scala-fix
               script:
                 - sbt scalafix
+                - git config user.name $GIT_USERNAME
+                - git config user.email $GIT_MAIL
                 - git diff --quite HEAD || git commit -am "Scala-fix code quality changes. [skip ci]"
                 - git push
               caches:
@@ -37,3 +42,27 @@ pipelines:
     - parallel:
         steps:
           - step:
+              name: Build and push Docker for Core module
+              script:
+                - cp version.sbt version
+                - sed -i 's/ThisBuild\ \/\ version\ \:\= \"//g' version
+                - sed -i 's/\"//g' version
+                - git log --oneline --decorate --color | head -n 100 > changes
+                - echo $REGISTRY_PASSWORD | docker login $REGISTRY_NAME --username $REGISTRY_USERNAME --password-stdin
+                - DOCKER_BUILDKIT=1 docker build --pull --file docker/Dockerfile --tag $REGISTRY_NAME/elte-full-stack-wiki-scala/core:$(<version) --tag $REGISTRY_NAME/elte-full-stack-wiki-scala/core:latest .
+                - docker push $REGISTRY_NAME/elte-full-stack-wiki-scala/core:$(<version)
+                - docker push $REGISTRY_NAME/elte-full-stack-wiki-scala/core:latest
+              services:
+                - docker
+              caches:
+                - docker
+          - step:
+              name: SBT release and push to Git
+              script:
+                - git config user.name $GIT_USERNAME
+                - git config user.email $GIT_MAIL
+                - sbt "release with-defaults"
+                - git push
+              caches:
+                - sbt
+                - ivy2

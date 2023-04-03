@@ -1,6 +1,9 @@
-import Dependencies._
+import Dependencies.*
 import sbt.Tests.{Group, SubProcess}
 import sbtassembly.MergeStrategy
+import sbtrelease.ReleasePlugin.autoImport.releaseVersionBump
+import sbtrelease.ReleaseStateTransformations.*
+import sbtrelease.{Version, versionFormatError}
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -26,6 +29,29 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions",
     "-language:postfixOps",
     "-Ymacro-annotations"
+  ),
+  releaseVersionBump := sbtrelease.Version.Bump.Next,
+  releaseIgnoreUntrackedFiles := true,
+  releaseVersion := {
+    ver =>
+      Version(ver).map(_.withoutQualifier.string)
+        .getOrElse(versionFormatError(ver))
+  },
+  releaseNextVersion := {
+    ver =>
+      Version(ver).map(_.bump(releaseVersionBump.value).withoutQualifier.string)
+        .getOrElse(versionFormatError(ver))
+  },
+  releaseTagComment := s"Releasing ${(ThisBuild / version).value}. [skip ci]",
+  releaseCommitMessage := s"Setting version to ${(ThisBuild / version).value}. [skip ci]",
+  releaseNextCommitMessage := s"Setting version to ${(ThisBuild / version).value}. [skip ci]",
+  releaseProcess := Seq[ReleaseStep](
+    inquireVersions,
+    setReleaseVersion,
+    commitReleaseVersion,
+    setNextVersion,
+    commitNextVersion,
+    pushChanges
   ),
   fork := true,
   IntegrationTest / fork := true,
