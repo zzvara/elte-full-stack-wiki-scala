@@ -30,14 +30,15 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-http-testkit" % "10.2.9",
     "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
     "com.typesafe.akka" %% "akka-http-testkit" % "10.2.9" % "test",
-    "de.heikoseeberger" %% "akka-http-json4s" % "1.38.2",
-    "org.json4s" %% "json4s-native" % "4.0.4",
-    "org.json4s" %% "json4s-core" % "4.0.4",
-    "org.json4s" %% "json4s-ext" % "4.0.4",
-    "org.json4s" %% "json4s-jackson" % "4.0.4",
+    "de.heikoseeberger" %% "akka-http-json4s" % "1.39.2",
+    "org.json4s" %% "json4s-native" % "4.0.6",
+    "org.json4s" %% "json4s-core" % "4.0.6",
+    "org.json4s" %% "json4s-ext" % "4.0.6",
+    "org.json4s" %% "json4s-jackson" % "4.0.6",
     "com.couchbase.client" %% "scala-client" % "1.4.0",
     "org.apache.commons" % "commons-lang3" % "3.12.0",
-    "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0"
+    "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
+    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.19.0"
   )
 
 }

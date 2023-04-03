@@ -1,0 +1,39 @@
+pipelines:
+  default:
+    - parallel:
+        steps:
+          - step:
+              name: SBT test
+              script:
+                - sbt "core/test"
+              caches:
+                - sbt
+                - ivy2
+          - step:
+              name: SBT assembly
+              script:
+                - sbt "core/assembly"
+              artifacts:
+                - "core/target/scala-2.13/core-assembly-*.jar"
+              caches:
+                - sbt
+                - ivy2
+          - step:
+              name: Scala-fix
+              script:
+                - sbt scalafix
+                - git diff --quite HEAD || git commit -am "Scala-fix code quality changes. [skip ci]"
+                - git push
+              caches:
+                - sbt
+                - ivy2
+          - step:
+              name: Dump license report
+              script:
+                - sbt dumpLicenseReport
+              caches:
+                - sbt
+                - ivy2
+    - parallel:
+        steps:
+          - step:

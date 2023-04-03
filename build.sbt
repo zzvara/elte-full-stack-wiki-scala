@@ -1,5 +1,15 @@
 import Dependencies._
 import sbt.Tests.{Group, SubProcess}
+import sbtassembly.MergeStrategy
+
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
+Project.inConfig(Test)(baseAssemblySettings)
+
+lazy val mergeStrategy: PartialFunction[String, MergeStrategy] = {
+  case x if x.endsWith("module-info.class")             => MergeStrategy.discard
+  case x if x.endsWith("scala-java8-compat.properties") => MergeStrategy.rename
+}
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.9",
@@ -23,6 +33,15 @@ lazy val commonSettings = Seq(
   Test / testForkedParallel := true,
   IntegrationTest / testForkedParallel := true,
   Global / concurrentRestrictions := Seq(Tags.limitAll(20)),
+  assembly / test := {},
+  assemblyPackageDependency / test := {},
+  assembly / assemblyShadeRules := Seq(),
+  assembly / assemblyMergeStrategy := mergeStrategy.orElse[String, MergeStrategy] {
+    case x: String =>
+      val oldStrategy: String => MergeStrategy =
+        (assembly / assemblyMergeStrategy).value
+      oldStrategy(x)
+  },
   Test / parallelExecution := true,
   Test / testGrouping := (Test / testGrouping).value.flatMap {
     group =>
@@ -31,10 +50,10 @@ lazy val commonSettings = Seq(
           test.name,
           Seq(test),
           /**
-           * @note Any forked JVM parameter must be defined here. `javaOptions` will not work, because
-           *       here we invoke the `SubProcess` that overrides `javaOptions`.
-           *       This is needed for Spark to work with Java 17.
-           */
+            * @note Any forked JVM parameter must be defined here. `javaOptions` will not work, because
+            *       here we invoke the `SubProcess` that overrides `javaOptions`.
+            *       This is needed for Spark to work with Java 17.
+            */
           SubProcess(ForkOptions().withRunJVMOptions(scala.Vector(
             "--add-opens=java.base/java.nio=ALL-UNNAMED",
             "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
@@ -57,7 +76,7 @@ lazy val commonSettings = Seq(
 lazy val core = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
-    name := "Core",
+    name := "core",
     description := "Core modules.",
     libraryDependencies ++= coreDependencies
   )
@@ -65,7 +84,7 @@ lazy val core = (project in file("core"))
 lazy val gatling = (project in file("gatling"))
   .settings(commonSettings: _*)
   .settings(
-    name := "Gatling",
+    name := "gatling",
     description := "Stress tests."
   )
   .dependsOn(
